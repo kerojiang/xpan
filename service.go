@@ -10,7 +10,7 @@ import (
 )
 
 // 数据Model
-type cmd struct {
+type cmdModel struct {
 	Name string `json:"name"`
 	Cmd  string `json:"cmd"`
 }
@@ -43,28 +43,24 @@ func (s Service) Do(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer conn.Close()
+	// 读取客户端数据
+
 }
 
 // OnReceive
-func (s Service) OnReceive() (cmd, error) {
+func (s Service) OnReceive() (cmdModeld, error) {
 	for {
 		_, data, err := conn.ReadMessage()
 		if err != nil {
-			return cmd{}, err
+			return cmdModel{}, err
 		}
 
 		// 解析返回的字节数组
-		clientCmd := cmd{}
+		clientCmd := cmdModel{}
 		if err := json.Unmarshal(data, &clientCmd); err != nil {
 			return clientCmd, nil
 		}
 	}
-}
-
-// Close
-func (s Service) Close() bool {
-	err := conn.Close()
-	return err == nil
 }
 
 // 异常处理
