@@ -64,13 +64,10 @@ func (s Service) OnReceive() (cmd, error) {
 // Close
 func (s Service) Close() bool {
 	err := conn.Close()
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 // 异常处理
 func onError(w http.ResponseWriter, r *http.Request, status int, reason error) {
-	fmt.Println("当前异常状态:", status, ",异常原因:", error.Error())
+	fmt.Println("当前异常状态:", status, ",异常原因:", reason)
 }
