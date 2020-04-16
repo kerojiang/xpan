@@ -23,15 +23,21 @@
 			$('#loginBut').click(function () {
 				if ($("#username").val() != "" && $("#password").val() != "") {
 					//发送登录数据
-					var sendMsg = $("#username").val() + "," + $("#password").val()
+					if (ws.readyState == 1) {
+						var sendMsg = $("#username").val() + "," + $("#password").val()
+						ws.send(sendMsg)
 
-					ws.send(sendMsg)
+
+					}
+
 				}
 
 			})
 
 
 		});
+
+
     </script>
 
 
@@ -67,17 +73,15 @@
 
 
 <script type="text/javascript">
-
 	ws = new WebSocket("ws://123.207.136.134:9010/ajaxchattest");
 
+	//接收server端返回数据
 	ws.onmessage = function (result) {
-		console.log(result.data);
-		if (result.data == "kerojiang") {
-			window.location.href = "./index.html"
-		}
+		alert(result.data);
+		// if (result.data == "kerojiang") {
+		// 	window.location.href = "./index.html"
+		// }
 	}
-
-
 </script>
 </body>
 
