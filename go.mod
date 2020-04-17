@@ -13,7 +13,7 @@ require (
 	github.com/golang/protobuf v1.4.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/iikira/Baidu-Login v1.2.2
-	github.com/iikira/BaiduPCS-Go v3.5.6+incompatible // indirect
+	github.com/iikira/BaiduPCS-Go v3.5.6+incompatible
 	github.com/iikira/baidu-tools v0.0.0-20190609113215-4dd64618064d
 	github.com/json-iterator/go v1.1.9
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0

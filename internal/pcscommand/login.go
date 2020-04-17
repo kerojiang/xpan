@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/iikira/Baidu-Login"
+	"github.com/iikira/BaiduPCS-Go/pcsliner"
+	"github.com/iikira/BaiduPCS-Go/requester"
 	"image/png"
 	"io/ioutil"
 	"xpan/internal/pcsfunctions/pcscaptcha"
-	"xpan/pcsliner"
-	"xpan/requester"
 )
 
 // handleVerifyImg 处理验证码, 下载到本地
