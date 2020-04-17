@@ -7,16 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>登录</title>
-    <link rel="icon" href="./favicon.ico" type="image/x-icon"/>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link rel="icon" href="./www/favicon.ico" type="image/x-icon"/>
+    <link href="./www/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./www/font-awesome/css/font-awesome.css" rel="stylesheet">
 
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="./www/css/animate.css" rel="stylesheet">
+    <link href="./www/css/style.css" rel="stylesheet">
     <!-- Mainly scripts -->
-    <script src="js/jquery-3.1.1.min.js"></script>
-    <script src="js/popper.min.js"></script>
-    <script src="js/bootstrap.js"></script>
+    <script src="./www/js/jquery-3.1.1.min.js"></script>
+    <script src="./www/js/popper.min.js"></script>
+    <script src="./www/js/bootstrap.js"></script>
     <script>
 		$(function () {
 
@@ -73,7 +73,7 @@
 
 
 <script type="text/javascript">
-	ws = new WebSocket("ws://localhost:8989");
+	ws = new WebSocket("ws://localhost:8989/ws");
 
 	//接收server端返回数据
 	ws.onmessage = function (result) {
