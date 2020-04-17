@@ -6,10 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"github.com/urfave/cli"
+	"github.com/iikira/Baidu-Login"
 	"net/http"
 	"strings"
-	"xpan/internal/pcscommand"
 	"xpan/internal/pcsconfig"
 )
 
@@ -33,32 +32,89 @@ var (
 			return true
 		},
 	}
-	c *cli.Context
 )
 
 // service类
 type Service struct {
+	bc       *baidulogin.BaiduClient
+	lj       *baidulogin.LoginJSON
+	vcodeStr string
+}
+
+func (s *Service) init() {
+	s.bc = baidulogin.NewBaiduClinet()
+}
+
+// 发送验证码
+func (s *Service) sendMobileCode() *ResponseModel {
+	msg := s.bc.SendCodeToUser("mobile", s.lj.Data.Token)
+
+	return &ResponseModel{
+		Code:    0,
+		Message: msg,
+		Success: true,
+	}
 }
 
 // 登录
 func (s *Service) login(model *RequestModel) *ResponseModel {
-
+	var result = new(ResponseModel)
 	user := strings.Split(model.Data, "|")
 
-	bduss, ptoken, stoken, err := pcscommand.RunLogin(c.String(user[0]), c.String(user[1]))
-	if err != nil {
-		panic(err)
-	}
-	_, err = pcsconfig.Config.SetupUserByBDUSS(bduss, ptoken, stoken)
-	if err != nil {
-		panic(err)
+	var bduss, ptoken, stoken, codeAddr string
+
+	s.lj = s.bc.BaiduLogin(user[0], user[1], user[2], s.vcodeStr)
+
+	switch s.lj.ErrInfo.No {
+	case "0": // 登录成功, 退出循环
+		bduss = s.lj.Data.BDUSS
+		ptoken = s.lj.Data.PToken
+		stoken = s.lj.Data.SToken
+	case "400023", "400101": // 需要验证手机或邮箱
+		nlj := s.bc.VerifyCode("mobile", s.lj.Data.Token, user[2], s.lj.Data.U)
+
+		if nlj.ErrInfo.No != "0" {
+			// 发送给前端错误数据
+			panic("校验用户手机验证码异常")
+		}
+		// 登录成功
+		bduss = s.lj.Data.BDUSS
+		ptoken = s.lj.Data.PToken
+		stoken = s.lj.Data.SToken
+	case "500001", "500002": // 验证码
+
+		s.vcodeStr = s.lj.Data.CodeString
+		if s.vcodeStr == "" {
+			panic("获取验证码异常")
+		}
+
+		// 图片验证码地址
+		codeAddr = "https://wappass.baidu.com/cgi-bin/genimage?" + s.vcodeStr
+
+	default:
+		panic("登录异常")
 	}
 
-	result := &ResponseModel{
-		Code:    0,
-		Message: "登录成功",
-		Success: true,
+	if bduss != "" && ptoken != "" && stoken != "" {
+		_, err := pcsconfig.Config.SetupUserByBDUSS(bduss, ptoken, stoken)
+		if err != nil {
+			panic(err)
+		}
+		result = &ResponseModel{
+			Code:    0,
+			Message: "登录成功",
+			Success: true,
+		}
+	} else {
+
+		result = &ResponseModel{
+			Code:    1,
+			Message: codeAddr,
+			Success: false,
+		}
+
 	}
+
 	return result
 }
 
@@ -99,6 +155,8 @@ func (s *Service) received(ws *websocket.Conn) {
 		result = s.who(model)
 	case "login":
 		result = s.login(model)
+	case "sendMobileCode":
+		result = s.sendMobileCode()
 
 	}
 
@@ -118,7 +176,7 @@ func (s *Service) received(ws *websocket.Conn) {
 
 // 服务端通用方法,解析用户请求,执行对应指令
 func (s Service) Do(w http.ResponseWriter, r *http.Request) {
-	// 初始化
+	// 初始化ws
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println(err)
