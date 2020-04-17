@@ -24,20 +24,15 @@
 				if ($("#username").val() != "" && $("#password").val() != "") {
 					//发送登录数据
 					if (ws.readyState == 1) {
-						var sendMsg = $("#username").val() + "," + $("#password").val()
-						ws.send(sendMsg)
-
-
+						var sendMsg = $("#username").val() + "|" + $("#password").val()
+						var requestData = {};
+						requestData.cmd = "login";
+						requestData.data = sendMsg;
+						ws.send(JSON.stringify(requestData))
 					}
-
 				}
-
 			})
-
-
 		});
-
-
     </script>
 
 
@@ -62,6 +57,7 @@
             <div class="form-group">
                 <input id="password" type="password" class="form-control" placeholder="请输入密码" required="">
             </div>
+
             <button id="loginBut" type="submit" class="btn btn-primary block full-width m-b">登录</button>
 
         </form>
@@ -79,9 +75,10 @@
 	//接收server端返回数据
 	ws.onmessage = function (result) {
 		alert(result.data);
-		// if (result.data == "kerojiang") {
-		// 	window.location.href = "./index.html"
-		// }
+		var responData = JSON.parse(result.data);
+		if (responData.success == true) {
+			window.location.href = "./index.html"
+		}
 	}
 </script>
 </body>

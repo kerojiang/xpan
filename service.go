@@ -6,18 +6,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/urfave/cli"
+	"net/http"
+	"strings"
 	"xpan/internal/pcscommand"
 	"xpan/internal/pcsconfig"
-
-	"net/http"
 )
 
-// 数据Model
-type CmdModel struct {
-	Key      string `json:"key"`
-	Cmd      string `json:"cmd"`
-	UserName string `json:"uname"`
-	Password string `json:"password"`
+// client请求数据Model
+type RequestModel struct {
+	Cmd  string `json:"cmd"`
+	Data string `json:"data"`
+}
+
+// service返回Model
+type ResponseModel struct {
+	Code    int    `json:"code"`
+	Success bool   `json:"success"`
+	Message string `json:"message"`
 }
 
 var (
@@ -27,6 +33,7 @@ var (
 			return true
 		},
 	}
+	c *cli.Context
 )
 
 // service类
@@ -34,34 +41,45 @@ type Service struct {
 }
 
 // 登录
-func (s Service) login(model *CmdModel) string {
-	bduss, ptoken, stoken, err := pcscommand.RunLogin(model.UserName, model.Password)
+func (s *Service) login(model *RequestModel) *ResponseModel {
+
+	user := strings.Split(model.Data, "|")
+
+	bduss, ptoken, stoken, err := pcscommand.RunLogin(c.String(user[0]), c.String(user[1]))
 	if err != nil {
 		panic(err)
 	}
-	baidu, err := pcsconfig.Config.SetupUserByBDUSS(bduss, ptoken, stoken)
+	_, err = pcsconfig.Config.SetupUserByBDUSS(bduss, ptoken, stoken)
+	if err != nil {
+		panic(err)
+	}
 
-	return ""
+	result := &ResponseModel{
+		Code:    0,
+		Message: "登录成功",
+		Success: true,
+	}
+	return result
 }
 
 //
-func (s Service) logout(model *CmdModel) string {
-	return ""
+func (s *Service) logout(model *RequestModel) *ResponseModel {
+	return nil
 }
 
 // 获取账号列表
-func (s Service) loglist(model *CmdModel) string {
-	return ""
+func (s *Service) loglist(model *RequestModel) *ResponseModel {
+	return nil
 }
 
 // 获取用户信息
-func (s Service) who(model *CmdModel) string {
+func (s *Service) who(model *RequestModel) *ResponseModel {
 
-	return "123"
+	return nil
 }
 
 // 接收客户端数据
-func (s Service) received(ws *websocket.Conn) {
+func (s *Service) received(ws *websocket.Conn) {
 	// 读取客户端数据
 	mt, data, err := ws.ReadMessage()
 	if err != nil {
@@ -69,14 +87,14 @@ func (s Service) received(ws *websocket.Conn) {
 	}
 
 	// 解析返回的字节数组
-	model := new(CmdModel)
+	model := new(RequestModel)
 	if err := json.Unmarshal(data, &model); err != nil {
 		fmt.Println(err)
 	}
 
 	// 根据解析到指令执行对应的操作
-	var result string
-	switch model.Key {
+	result := new(ResponseModel)
+	switch model.Cmd {
 	case "who":
 		result = s.who(model)
 	case "login":
@@ -85,7 +103,11 @@ func (s Service) received(ws *websocket.Conn) {
 	}
 
 	// 结果返回给前端
-	err = ws.WriteMessage(mt, []byte(result))
+	bresult, err := json.Marshal(result)
+	if err != nil {
+		panic(err)
+	}
+	err = ws.WriteMessage(mt, bresult)
 
 	if err != nil {
 		panic(err)
@@ -117,7 +139,7 @@ func NewService() *Service {
 	return &Service{}
 }
 
-// 异常处理
+// ws异常处理
 func onError(w http.ResponseWriter, r *http.Request, status int, reason error) {
 	fmt.Println("当前异常状态:", status, ",异常原因:", reason)
 }
