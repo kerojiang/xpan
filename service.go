@@ -6,13 +6,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"xpan/internal/pcscommand"
+	"xpan/internal/pcsconfig"
+
 	"net/http"
 )
 
 // 数据Model
 type CmdModel struct {
-	Key string `json:"key"`
-	Cmd string `json:"cmd"`
+	Key      string `json:"key"`
+	Cmd      string `json:"cmd"`
+	UserName string `json:"uname"`
+	Password string `json:"password"`
 }
 
 var (
@@ -29,22 +34,28 @@ type Service struct {
 }
 
 // 登录
-func (s Service) login(msg string) string {
+func (s Service) login(model *CmdModel) string {
+	bduss, ptoken, stoken, err := pcscommand.RunLogin(model.UserName, model.Password)
+	if err != nil {
+		panic(err)
+	}
+	baidu, err := pcsconfig.Config.SetupUserByBDUSS(bduss, ptoken, stoken)
+
 	return ""
 }
 
 //
-func (s Service) logout(msg string) string {
+func (s Service) logout(model *CmdModel) string {
 	return ""
 }
 
 // 获取账号列表
-func (s Service) loglist(msg string) string {
+func (s Service) loglist(model *CmdModel) string {
 	return ""
 }
 
 // 获取用户信息
-func (s Service) who(msg string) string {
+func (s Service) who(model *CmdModel) string {
 
 	return "123"
 }
@@ -58,18 +69,18 @@ func (s Service) received(ws *websocket.Conn) {
 	}
 
 	// 解析返回的字节数组
-	clientCmd := CmdModel{}
-	if err := json.Unmarshal(data, &clientCmd); err != nil {
+	model := new(CmdModel)
+	if err := json.Unmarshal(data, &model); err != nil {
 		fmt.Println(err)
 	}
 
 	// 根据解析到指令执行对应的操作
 	var result string
-	switch clientCmd.Key {
+	switch model.Key {
 	case "who":
-		result = s.who(clientCmd.Cmd)
+		result = s.who(model)
 	case "login":
-		result = s.login(clientCmd.Cmd)
+		result = s.login(model)
 
 	}
 
