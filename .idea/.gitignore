@@ -12,7 +12,7 @@
 *.out
 
 # Dependency directories (remove the comment below to include it)
-# vendor/
+vendor/
 
 # Default ignored files
 /shelf/
@@ -22,3 +22,5 @@
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
+
+bin/
